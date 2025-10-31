@@ -8,8 +8,8 @@ class PackegeError(Exception):
 
 
 class PackegeType(Enum):
-    DATA = b'\x00'
-    PING = b'\x01'
+    DATA: bytes = b'\x00'
+    PING: bytes = b'\x01'
 
 
 packege_type_dict = {
@@ -34,10 +34,10 @@ class Package:
         return PackageData(vc_type=packege_type_dict[p_type], b_data=b_data)
 
     @classmethod
-    def ecode(cls, p_type: bytes, data: bytes) -> bytes:
+    def ecode(cls, p_type: bytes, b_data: bytes) -> bytes:
         if p_type not in packege_type_dict:
             raise PackegeError('type not found')
-        return p_type + data
+        return p_type + b_data
 
 
 
