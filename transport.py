@@ -10,11 +10,14 @@ class TCPServer:
         self.tx_queue = asyncio.Queue()
         self.connections = {}
 
-    def answer(self, addr, raw):
+    def send_data(self, addr, raw):
         self.tx_queue.put_nowait({'address': addr, 'raw': raw})
 
-    def get_request(self):
-        return self.rx_queue.get_nowait()
+    def get_data(self):
+        try:
+            return self.rx_queue.get_nowait()
+        except asyncio.QueueEmpty:
+            return None
 
     async def handle_answer(self):
         """Обрабатываем ответы"""
@@ -109,11 +112,13 @@ class TCPClient:
             if data:
                 self.tx_queue.put_nowait(data)
 
-    def send(self, raw: bytes):
+    def send_data(self, raw: bytes):
         self.tx_queue.put_nowait(raw)
 
-    def get_answer(self):
-        return self.rx_queue.get_nowait()
-
+    def get_data(self):
+        try:
+            return self.rx_queue.get_nowait()
+        except asyncio.QueueEmpty:
+            return None
 
 
