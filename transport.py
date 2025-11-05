@@ -110,7 +110,7 @@ class TCPClient:
         while True:
             data = await self.reader.read(4096)
             if data:
-                self.tx_queue.put_nowait(data)
+                self.rx_queue.put_nowait(data)
 
     def send_data(self, raw: bytes):
         self.tx_queue.put_nowait(raw)
