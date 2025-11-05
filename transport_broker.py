@@ -46,8 +46,8 @@ class TransportBrokerServer:
 
     def get_data(self):
         result = []
-        for client in self.servers:
-            data = client.get_data()
+        for server in self.servers:
+            data = server.get_data()
             if data:
                 result.append(data)
         return result
