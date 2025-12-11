@@ -34,6 +34,7 @@ class TransportBrokerServer:
     def __init__(self, address_list):
         """address_list: ["172.0.0.1", 8888]"""
         self.address_list = address_list
+        print('address_list', address_list)
         self.servers = [TCPServer(*addr) for addr in self.address_list]
         self.current_send_server = 0
 
