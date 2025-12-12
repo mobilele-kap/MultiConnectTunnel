@@ -3,6 +3,7 @@ from transport import TCPServer, TCPClient
 import asyncio
 from package import Package, PackegeType
 import traceback
+from time import time
 
 
 class TunnelClient:
@@ -22,18 +23,18 @@ class TunnelClient:
         await self.server.run_server()
         await self.transport_broker_client.start()
         while True:
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.5)
             try:
-            # Получение:
+                # Получение:
                 data = self.server.get_data()
                 if data:
-                    print('Получен пакет от', data.get('address'))
+                    print('TunnelClient Получен пакет от', data.get('address'))
                     address = data.get('address')
                     if address not in self.address_to_client_id_dict:
                         max_client_id = max(self.client_id_to_address_dict) if self.client_id_to_address_dict else 0
                         max_client_id = 0 if not max_client_id else max_client_id
                         if max_client_id + 1 >= 256:
-                            print('overflow client_id')
+                            print('TunnelClient overflow client_id')
                             continue
                         n_client_id = max_client_id + 1
                         self.address_to_client_id_dict[address] = n_client_id
@@ -51,11 +52,12 @@ class TunnelClient:
                             package = Package.decode(data)
                             n_client_id = package.n_client_id
                             address = self.client_id_to_address_dict.get(n_client_id)
-                            print(f'Ответ клиента: {package.b_data[0:20]}')
+                            print(f'TunnelClient Ответ клиента: {package.b_data[0:20]}')
                             self.server.send_data(addr=address, raw=package.b_data)
                         except Exception:
                             print(traceback.format_exc())
-            except Exception:
+            except Exception as e:
+                print(e)
                 print(traceback.format_exc())
 
     def start(self):
@@ -78,18 +80,18 @@ class TunnelServer:
     async def handle_transport(self):
         await self.transport_broker_server.start()
         while True:
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.001)
             # Обработка входящих запросов:
             data_list = self.transport_broker_server.get_data()
             if data_list:
                 for data in data_list:
-                    print('Получен пакет от', data.get('address'))
+                    print('TunnelServer Получен пакет от', data.get('address'), data.get('raw')[0:10])
                     try:
                         address = data.get('address')
                         b_data = data.get('raw')
                         package = Package.decode(b_data)
                         if package.n_client_id not in self.client_id_to_client:
-                            print('Новый клиент для ', self.host, self.port)
+                            print('TunnelServer Новый клиент для ', self.host, self.port)
                             client = TCPClient(host=self.host, port=self.port)
                             await client.connect()
                             self.client_id_to_client[package.n_client_id] = client
@@ -97,7 +99,7 @@ class TunnelServer:
                             client.send_data(package.b_data)
                         else:
                             client = self.client_id_to_client[package.n_client_id]
-                            await client.send_data(package.b_data)
+                            client.send_data(package.b_data)
                     except Exception:
                         print(traceback.format_exc())
 
@@ -105,7 +107,8 @@ class TunnelServer:
             for n_client_id, client in self.client_id_to_client.items():
                 data = client.get_data()
                 address = self.client_id_to_address.get(n_client_id)
-                if data:
+                if data is not None:
+                    print(f'TunnelServer Получен ответ от {address} {data[0:20]}')
                     b_data = Package.ecode(p_type=PackegeType.DATA.value, n_client_id=n_client_id, b_data=data)
                     self.transport_broker_server.send_data(address, b_data)
 

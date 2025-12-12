@@ -39,6 +39,7 @@ class TransportBrokerServer:
         self.current_send_server = 0
 
     def send_data(self, addr, raw):
+        print(f'TransportBrokerServer: выбран {self.address_list[self.current_send_server]}')
         self.servers[self.current_send_server].send_data(addr, raw)
         if self.current_send_server + 1 >= len(self.servers):
             self.current_send_server = 0
@@ -49,7 +50,8 @@ class TransportBrokerServer:
         result = []
         for server in self.servers:
             data = server.get_data()
-            if data:
+            if data is not None:
+                print(f'>>>>>>>>>>>>>>>{data=}')
                 result.append(data)
         return result
 
