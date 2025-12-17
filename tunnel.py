@@ -23,7 +23,7 @@ class TunnelClient:
         await self.server.run_server()
         await self.transport_broker_client.start()
         while True:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.0001)
             try:
                 # Получение:
                 data = self.server.get_data()
@@ -80,7 +80,7 @@ class TunnelServer:
     async def handle_transport(self):
         await self.transport_broker_server.start()
         while True:
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.0001)
             # Обработка входящих запросов:
             data_list = self.transport_broker_server.get_data()
             if data_list:

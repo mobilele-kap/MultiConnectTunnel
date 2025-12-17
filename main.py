@@ -11,8 +11,6 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=12080, help='Локальный порт')
     args = parser.parse_args()
     address_pool = [(address.strip().split(':')[0], int(address.strip().split(':')[1])) for address in args.address_pool.split(',')]
-    print('args.address_pool', args.address_pool)
-    print('address_pool', address_pool)
     if args.server:
         tunnel = TunnelServer(address_list=address_pool, host=args.host, port=args.port)
     else:

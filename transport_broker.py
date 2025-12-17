@@ -1,4 +1,5 @@
 from transport import TCPClient, TCPServer
+from exception import ConnectNotFound
 
 
 class TransportBrokerClient:
@@ -34,24 +35,23 @@ class TransportBrokerServer:
     def __init__(self, address_list):
         """address_list: ["172.0.0.1", 8888]"""
         self.address_list = address_list
-        print('address_list', address_list)
         self.servers = [TCPServer(*addr) for addr in self.address_list]
-        self.current_send_server = 0
 
     def send_data(self, addr, raw):
-        print(f'TransportBrokerServer: выбран {self.address_list[self.current_send_server]}')
-        self.servers[self.current_send_server].send_data(addr, raw)
-        if self.current_send_server + 1 >= len(self.servers):
-            self.current_send_server = 0
+        """Найти адрес и отпавить в нужный сервер (приёмник)"""
+        for server in self.servers:
+            connect = server.connections.get(addr)
+            if connect:
+                server.send_data(addr, raw)
+                break
         else:
-            self.current_send_server += 1
+            raise ConnectNotFound(addr)
 
     def get_data(self):
         result = []
         for server in self.servers:
             data = server.get_data()
             if data is not None:
-                print(f'>>>>>>>>>>>>>>>{data=}')
                 result.append(data)
         return result
 

@@ -11,7 +11,7 @@ class TCPServer:
         self.connections = {}
 
     def send_data(self, addr, raw):
-        print(f'TCPServer: добавлено в очередь отправки {raw[0:20]}')
+        print(f'TCPServer: добавлено в очередь отправки {raw[0:5]}')
         self.tx_queue.put_nowait({'address': addr, 'raw': raw})
 
     def get_data(self):
@@ -20,39 +20,35 @@ class TCPServer:
         except asyncio.QueueEmpty:
             return None
 
-    def __del__(self):
-        print('!!!DEL!!!!')
-
     async def handle_answer(self):
         """Обрабатываем ответы"""
         while True:
-            await asyncio.sleep(0.001)
+            await asyncio.sleep(0.0001)
             queue_data = await self.tx_queue.get()
             addr = queue_data['address']
             print(f'TCPServer: Отправка к {addr}')
             connect = self.connections.get(addr)
             if not connect:
-                print(f'TCPServer: not connect!!!!!!! {connect=}')
+                print(f'TCPServer: not connect!!!!!!! {connect=} {addr=}')
                 continue
             raw = queue_data['raw']
             writer = connect['writer']
             try:
-                print(f'TCPServer: Отправа данных {raw[0:20]}')
+                print(f'TCPServer: Отправа данных {raw[0:5]}')
                 writer.write(raw)
                 await writer.drain()
             except Exception:
                 print(f"TCPServer: Ошибка с клиентом: {addr} для {self.host}:{self.port}: {traceback.format_exc()}")
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.0001)
 
     async def handle_request(self, addr):
         try:
             while True:
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.0001)
                 connect = self.connections[addr]
                 if connect['reader']:
                     b_data = await connect['reader'].read(65000)
                     if b_data:
-                        print(f'TCPServer: получение {b_data}')
                         self.rx_queue.put_nowait({'address': addr, 'raw': b_data})
         except Exception:
             print(f"Ошибка с клиентом: {addr} для {self.host}:{self.port}: {traceback.format_exc()}")
@@ -64,7 +60,7 @@ class TCPServer:
         addr = writer.get_extra_info('peername')
         print(f'Новое подключение {addr}')
         if addr not in self.connections:
-            print(f'self.connections = {list(self.connections.keys())}')
+            # print(f'self.connections = {list(self.connections.keys())}')
             task = asyncio.create_task(self.handle_request(addr))
             self.connections[addr] = {'task': task}
         else:
